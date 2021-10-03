@@ -1,6 +1,7 @@
 import java.util.Scanner;
 import java.util.HashMap;
 import java.lang.Character; 
+// import javafx.util.Pair;
 // USER : 1 -> X
 // COMP : -1 -> O
 // DRAW : 0
@@ -62,7 +63,7 @@ class TicTacToe{
                     continue;
                 }
                 if(checkIfPlaceIsFilled(choice, board, map)){
-                    System.out.println("The Place is Already filled ");
+                    System.out.println("The Place is Already Filled");
                     continue;
                 }
 
@@ -74,15 +75,22 @@ class TicTacToe{
             }
             else{
                 int bestMove = Integer.MAX_VALUE;
+                int level = Integer.MAX_VALUE;
                 int bestRow = -1; 
                 int bestCol = -1;
                 for(int i=0; i<3;i++){
                     for(int j=0; j<3; j++){
                         if(board[i][j] == ' '){
                             board[i][j] = 'O';
-                            int currentBest = findBestMove(map, board, true, countMoves + 1);
-                            if(currentBest < bestMove){
-                                bestMove = currentBest;
+                            Pair currentBest = findBestMove(map, board, true, countMoves + 1, 0);
+                            if( currentBest.key() == bestMove && currentBest.value() < level ){
+                                level =  currentBest.value();
+                                bestRow = i;
+                                bestCol = j;
+                            }
+                            else if(currentBest.key() < bestMove){
+                                bestMove = currentBest.key();
+                                level = currentBest.value();
                                 bestRow = i;
                                 bestCol = j;
                             }
@@ -97,48 +105,68 @@ class TicTacToe{
         }
 
     }
-
-    public static int findBestMove(HashMap<Integer, Integer[]> mapping, char[][] board, boolean user, int moves){
+    // Pair
+    // first value stand as score
+    // second value stand as level
+    public static Pair findBestMove(HashMap<Integer, Integer[]> mapping,
+                                                     char[][] board,
+                                                     boolean user, 
+                                                     int moves,
+                                                     int level){
         int winner = checkWinner(board);
         // checking if someone is won
         if(winner != 2){
-            return winner;
+            return new Pair(winner, level);
         }
 
         // check if match is DRAW 
         if(checkIfDraw(moves)){
-            return 0;
-        }
+            return new Pair(0,level);
+        }   
 
         if(user){
             //  as user we want to maximize the result
             int bestMove = Integer.MIN_VALUE;
+            int bestLevel = Integer.MAX_VALUE;
             for(int i=0; i<3; i++){
                 for(int j=0; j<3; j++){
                     if(board[i][j] == ' '){
                         board[i][j] = 'X';
-                        int currentBest = findBestMove(mapping, board, false, moves+1);
-                        bestMove = Math.max(bestMove, currentBest);
+                        Pair currentBest = findBestMove(mapping, board, false, moves+1, level + 1);
+                        if(currentBest.key() == bestMove && currentBest.value() < level){
+                            bestLevel = currentBest.value();
+                        }
+                        else if( currentBest.key() >= bestMove ){
+                            bestMove = currentBest.key();
+                            bestLevel = currentBest.value();
+                        }
                         board[i][j] = ' ';
                     }
                 }
             }
-            return bestMove;
+            return new Pair(bestMove,bestLevel);
         }
         else{
             // as computer i want to minimise the result
             int bestMove = Integer.MAX_VALUE;
+            int bestLevel = Integer.MAX_VALUE;
             for(int i=0; i<3; i++){
                 for(int j=0; j<3; j++){
                     if(board[i][j] == ' '){
                         board[i][j] = 'O';
-                        int currentBest = findBestMove(mapping, board, true, moves+1);
-                        bestMove = Math.min(bestMove, currentBest);
+                        Pair currentBest = findBestMove(mapping, board, true, moves+1, level + 1);
+                        if(currentBest.key() == bestMove && currentBest.value() < level){
+                            bestLevel = currentBest.value();
+                        }
+                        else if( currentBest.key() < bestMove ){
+                            bestMove = currentBest.key();
+                            bestLevel = currentBest.value();
+                        }
                         board[i][j] = ' ';
                     }
                 }
             }
-            return bestMove;
+            return new Pair(bestMove,bestLevel);
         }
     }
 
@@ -247,10 +275,10 @@ class TicTacToe{
         return false;
     }
 
-    public static void printBoard(char[][] arr){
-        for(char ch[] : arr){
-            for(char cha : ch){
-                System.out.print((cha==' ' ? '-' : cha)+" ");
+    public static void printBoard(char[][] board){
+        for(char rows[] : board){
+            for(char col : rows){
+                System.out.print((col==' ' ? '-' : col)+" ");
             }
             System.out.println();
         }
@@ -259,7 +287,7 @@ class TicTacToe{
 
     public static void printBoardInstruntion(){
         int cnt = 1;
-        System.out.println("select numbers to choose your positions");
+        System.out.println("Select Numbers To Choose Your Positions");
         for(int i=0;i<3;i++){
             for(int j=0;j<3;j++){
                 System.out.print(cnt + " ");
@@ -267,7 +295,5 @@ class TicTacToe{
             }
             System.out.println();
         }
-        return ;
     }
-
 }
